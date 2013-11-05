@@ -8,8 +8,6 @@ class testApp : public ofBaseApp{
 		void setup();
 		void update();
 		void draw();
-
-      void drawFboTest();
     
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -47,19 +45,20 @@ class testApp : public ofBaseApp{
     float smoothedVol;
     float scaledVol;
     
-        
+    
     //mode selector
     int number;
     int numberBlend;
+    int Snumber;
     
     //blendmode
     ofBlendMode blendMode;
+
+    
+    // speed
+    float currentSpeed;
     
     
-    //fbo
-    ofFbo rgbaFboFloat;
-    ofFbo rgbaFbo;
-    int fadeAmnt;
     
     
 };

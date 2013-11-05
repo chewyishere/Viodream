@@ -13,25 +13,15 @@ void testApp::setup(){
     ofEnableAlphaBlending();
 	ofSetVerticalSync(true);
 	ofSetCircleResolution(80);
-	//ofBackground(255);
-    ofToggleFullscreen();
+    //ofToggleFullscreen();
 
     number=0;
+    Snumber=1;
     
     //sound
     soundStream.listDevices();
     
-    //bfo
-    rgbaFbo.allocate(ofGetScreenWidth(), ofGetScreenHeight(), GL_RGBA);
-    rgbaFboFloat.allocate(ofGetScreenWidth(), ofGetScreenHeight(), GL_RGBA32F_ARB);
-	
-    rgbaFbo.begin();
-	ofClear(255,255,255, 0);
-    rgbaFbo.end();
-    
-    fadeAmnt=50;
-    
-	
+
 	int bufferSize = 256;
 	
 	left.assign(bufferSize, 0.0);
@@ -51,8 +41,26 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
+   
+   	//sound
+    
+	scaledVol = ofMap(smoothedVol, 0.0, 0.17, 0.0, 0.1, true);
+    //lets record the volume into an array
+    volHistory.push_back( scaledVol );
+    
+    //if we are bigger the the size we want to record - lets drop the oldest value
+	if( volHistory.size() >= 400 ){
+		volHistory.erase(volHistory.begin(), volHistory.begin()+1);
+	}
+    
+    
+    currentSpeed = ofMap(scaledVol, 1.0f, 30.0f, 0.8f, 4.0f);
+
     
     //prevVid - [ thisVid1 - thisVid2 ] - nextVid
+    
+    //vidPlayer[thisVid2].setSpeed(currentSpeed);
+    //vidPlayer[thisVid1].setSpeed(currentSpeed);
     
     vidPlayer[thisVid1].update();
     vidPlayer[thisVid2].update();
@@ -65,61 +73,39 @@ void testApp::update(){
         thisVid1 = thisVid2; // set prevVid to currentVid
         thisVid2 = nextVid;
         
-        
         vidPlayer[prevVid].close();
+        
     }
     
-    
-    if( numberBlend == 1)blendMode = OF_BLENDMODE_ADD;
+  
+             
+    if( numberBlend == 1)blendMode = OF_BLENDMODE_ALPHA;
     else if( numberBlend == 2)blendMode = OF_BLENDMODE_MULTIPLY;
     else if( numberBlend == 3)blendMode = OF_BLENDMODE_SUBTRACT;
     else if( numberBlend == 4)blendMode = OF_BLENDMODE_DISABLED;
-    else if( numberBlend == 5)blendMode = OF_BLENDMODE_ALPHA;
     
+ 
 }
 
-
-
-//--------------------------------------------------------------
-
-void testApp::drawFboTest(){
-//	
-//	if( ofGetKeyPressed('0') ){
-//		ofClear(255,255,255, 0);
-//	}
-    
-    
-    ofFill();
-    
-    ofColor dark(10,fadeAmnt);
-    ofColor black(0, fadeAmnt);
-    
-    ofBackgroundGradient(dark, black);
-    
-    
-}
 
 //--------------------------------------------------------------
 
 void testApp::draw(){
-    
-    ofSetColor(255, 50);
-    rgbaFbo.draw(0,0);
-    rgbaFboFloat.draw(0,0);
-    
-   // ofDrawBitmapString(ofToString(fadeAmnt),0,100);
-    
+
+
     ofEnableBlendMode(blendMode);
-    //ofSetHexColor(0xFFFFFF);
-    //ofSetBackgroundColor(0);
     
-    ofSetColor(255, 255);
-    vidPlayer[thisVid1].draw(0,0);//,1440,900);
+    vidPlayer[thisVid1].draw(0,0);
     
     ofSetColor(255, 200);
-    vidPlayer[thisVid2].draw(0,0);//,1440,900);
+    vidPlayer[thisVid2].draw(0,0);
     
-    cout << "currently playing vid num: "<<thisVid1<<" and "<<thisVid2<<endl;
+    cout << "section "<<Snumber<<endl;
+    cout << " vid num: "<<thisVid1<<" and "<<thisVid2<<endl;
+    cout << "blending mode "<<numberBlend<<endl;
+    
+    
+
 }
 
 
@@ -157,59 +143,84 @@ void testApp::audioIn(float * input, int bufferSize, int nChannels){
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
-    int pNumber = number;
+
     
+    int pNumber = number;
+   
     if( key == '`' ) ofToggleFullscreen();
+    
+    //-------------------- Section Number  ---------------
+    
+    if( key == 'q' ) Snumber = 1;
+    else if( key == 'w' ) Snumber = 2;
+    else if( key == 'e' ) Snumber = 3;
+    else if( key == 'r' ) Snumber = 4;
+    else if( key == 't' ) Snumber = 5;
+    
+    
+      // ---------------- Video Number   ----------------
+    
     else if( key == '1' ) number = 1;
     else if( key == '2' ) number = 2;
     else if( key == '3' ) number = 3;
     else if( key == '4' ) number = 4;
     else if( key == '5' ) number = 5;
   	else if( key == '6' ) number = 6;
-    else if( key == '7' ) number = 7;
-    else if( key == '8' ) number = 8;
-    //if( key == '9' ) number = 9;
-    else if( key == '0' ) number = 0;
+    else if( key == '7' ) {
+
+        vidPlayer[thisVid2].firstFrame();
+        vidPlayer[thisVid2].stop();
+        vidPlayer[thisVid1].firstFrame();
+        vidPlayer[thisVid1].stop();
+        
+        ofFill();
+        ofSetColor(0);
+        ofRect(0,0,1440,900);
+    }
+    
+
+    
     
     
     if(pNumber != number){
-        string vidFile = "02/s"+ ofToString(number) +".mov";
+        
+        string vidFile = "01/s"+ ofToString(number) +".mov";
+        
+        if (Snumber == 1) {
+          vidFile = "01/s"+ ofToString(number) +".mov";
+        }
+        else if (Snumber == 2) {
+          vidFile = "02/s"+ ofToString(number) +".mov";
+        }
+        else if (Snumber == 3) {
+          vidFile = "03/s"+ ofToString(number) +".mov";
+        }
+        else if (Snumber == 4) {
+          vidFile = "04/s"+ ofToString(number) +".mov";
+        }
+        else if (Snumber == 5) {
+          vidFile = "05/s"+ ofToString(number) +".mov";
+        }
         
         nextVid = number;
         vidPlayer[nextVid].loadMovie(vidFile);
         vidPlayer[nextVid].firstFrame();
     }
     
-    else {
-        //-------------------- Interactive  ---------------
-        
-        if( key == 'q' ) number = 11;
-        if( key == 'w' ) number = 12;
-        if( key == 'e' ) number = 13;
-        if( key == 'r' ) number = 14;
-        if( key == 't' ) number = 15;
-        if( key == 'y' ) number = 16;
-        if( key == 'u' ) number = 17;
-        
         if( key == 'z' ){
             numberBlend = 1;
         }
-        if( key == 'x' ){
+        else if( key == 'x' ){
             numberBlend = 2;
         }
-        if( key == 'c' ){
+        else if( key == 'c' ){
             numberBlend = 3;
         }
-        if( key == 'v' ){
+        else if( key == 'v' ){
             numberBlend = 4;
         }
-        if( key == 'b' ){
-            numberBlend = 5;
-        }
-        if( key == 'n' ){
-            numberBlend = 6;
-        }
-        if( key == 's' ){
+        
+        if( key == ' ' ){
             
             if(vidPlayer[thisVid2].isPlaying()){
                 vidPlayer[thisVid2].stop();
@@ -218,8 +229,10 @@ void testApp::keyPressed(int key){
                 vidPlayer[thisVid2].play();
             }
         }
+        
+   
     }
-}
+    
 
 //--------------------------------------------------------------
 void testApp::keyReleased(int key){
