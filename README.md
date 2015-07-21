@@ -1,2 +1,1 @@
-Interactive visual performance for New World Symphony.
-Developer, Perfomer: Qiu yi Wu
+Interactive visual performance for New World Symphony created and performed by Qiu Yi Wu
